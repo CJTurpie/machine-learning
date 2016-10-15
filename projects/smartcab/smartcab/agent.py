@@ -109,6 +109,10 @@ def run():
     plt.xlabel("Trial")
     plt.ylabel("Reward")
     plt.show()
+    plt.plot(a.success_tracker, linestyle='None', marker='x')
+    plt.xlabel("Trial")
+    plt.ylabel("Sucess")
+    plt.show()
 
 if __name__ == '__main__':
     run()
