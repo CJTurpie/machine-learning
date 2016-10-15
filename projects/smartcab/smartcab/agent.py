@@ -2,6 +2,9 @@ import random
 from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
@@ -11,10 +14,20 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
+        # variables to track the reward and success of each trial
+        self.trial_reward = 0
+        self.reward_tracker = []
+        self.trial_success = False
+        self.success_tracker = []
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+        # store each trials reward and success
+        self.reward_tracker.append(self.trial_reward)
+        self.trial_reward = 0
+        self.success_tracker.append(self.trial_success)
+        self.trial_success = False
 
     def update(self, t):
         # Gather inputs
@@ -29,6 +42,10 @@ class LearningAgent(Agent):
 
         # Execute action and get reward
         reward = self.env.act(self, action)
+        # store the reward and check for success
+        self.trial_reward += reward
+        if reward > 2:
+            self.trial_success = True
 
         # TODO: Learn policy based on state, action, reward
 
@@ -45,12 +62,26 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
 
+    # remove the first item from the trackers as they are the initialised values not from a trial
+    a.reward_tracker = a.reward_tracker[1:]
+    a.success_tracker = a.success_tracker[1:]
+    # print the reward and success trackers
+    print "Reward: {}".format(a.reward_tracker)
+    print "Success: {}".format(a.success_tracker)
+    # calulate some statistics
+    print "Number of successes: {}".format(a.success_tracker.count(True))
+    print "Average reward: {}".format(np.mean(a.reward_tracker))
+    # plot the rewards over time
+    plt.plot(a.reward_tracker)
+    plt.xlabel("Trial")
+    plt.ylabel("Reward")
+    plt.show()
 
 if __name__ == '__main__':
     run()
