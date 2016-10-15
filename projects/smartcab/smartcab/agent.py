@@ -76,7 +76,7 @@ class LearningAgent(Agent):
         self.Q[self.state][action] = (((1 - self.learning_rate) * self.Q[self.state][action])
                                      + (self.learning_rate * (reward + self.discount_factor * (max(self.Q[self.state].values())))))
 
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        # print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
 def run():
@@ -99,8 +99,8 @@ def run():
     a.reward_tracker = a.reward_tracker[1:]
     a.success_tracker = a.success_tracker[1:]
     # print the reward and success trackers
-    print "Reward: {}".format(a.reward_tracker)
-    print "Success: {}".format(a.success_tracker)
+    # print "Reward: {}".format(a.reward_tracker)
+    # print "Success: {}".format(a.success_tracker)
     # calulate some statistics
     print "Number of successes: {}".format(a.success_tracker.count(True))
     print "Average reward: {}".format(np.mean(a.reward_tracker))
