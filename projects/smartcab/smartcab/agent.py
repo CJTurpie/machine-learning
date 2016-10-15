@@ -19,6 +19,8 @@ class LearningAgent(Agent):
         self.reward_tracker = []
         self.trial_success = False
         self.success_tracker = []
+        # initialise state
+        self.state = {}
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
@@ -28,6 +30,8 @@ class LearningAgent(Agent):
         self.trial_reward = 0
         self.success_tracker.append(self.trial_success)
         self.trial_success = False
+        # reset state
+        self.state = {}
 
     def update(self, t):
         # Gather inputs
@@ -36,6 +40,10 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
+        self.state = {"waypoint": self.next_waypoint,
+                      "light": inputs["light"],
+                      "oncoming": inputs["oncoming"],
+                      "left": inputs["left"]}
 
         # TODO: Select action according to your policy
         action = random.choice(self.env.valid_actions)
@@ -62,7 +70,7 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
