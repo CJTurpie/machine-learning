@@ -82,37 +82,65 @@ class LearningAgent(Agent):
 def run():
     """Run the agent for a finite number of trials."""
 
-    # Set up environment and agent
-    e = Environment()  # create environment (also adds some dummy traffic)
-    a = e.create_agent(LearningAgent)  # create agent
-    e.set_primary_agent(a, enforce_deadline=False)  # specify agent to track
-    # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
+    learning_rates = (0, 0.05, 0.1, 0.5, 0.9, 0.95, 1)
+    discount_factors = (0, 0.05, 0.1, 0.5, 0.9, 0.95, 1)
+    exploration_rates = (0, 0.05, 0.1, 0.5, 0.9, 0.95, 1)
+    initial_Qs = (0, 13)
 
-    # Now simulate it
-    sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
-    # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+    successes = np.zeros((len(learning_rates), len(discount_factors), len(exploration_rates), len(initial_Qs)))
+    average_rewards = np.zeros((len(learning_rates), len(discount_factors), len(exploration_rates), len(initial_Qs)))
 
-    sim.run(n_trials=100)  # run for a specified number of trials
-    # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+    for iii, learning_rate in enumerate(learning_rates):
+        for jjj, discount_factor in enumerate(discount_factors):
+            for kkk, exploration_rate in enumerate(exploration_rates):
+                for lll, initial_Q in enumerate(initial_Qs):
 
-    # remove the first item from the trackers as they are the initialised values not from a trial
-    a.reward_tracker = a.reward_tracker[1:]
-    a.success_tracker = a.success_tracker[1:]
-    # print the reward and success trackers
-    # print "Reward: {}".format(a.reward_tracker)
-    # print "Success: {}".format(a.success_tracker)
-    # calulate some statistics
-    print "Number of successes: {}".format(a.success_tracker.count(True))
-    print "Average reward: {}".format(np.mean(a.reward_tracker))
-    # plot the rewards over time
-    plt.plot(a.reward_tracker)
-    plt.xlabel("Trial")
-    plt.ylabel("Reward")
-    plt.show()
-    plt.plot(a.success_tracker, linestyle='None', marker='x')
-    plt.xlabel("Trial")
-    plt.ylabel("Sucess")
-    plt.show()
+                    # Set up environment and agent
+                    e = Environment()  # create environment (also adds some dummy traffic)
+                    a = e.create_agent(LearningAgent)  # create agent
+                    # set the parameters to help the agent perform better
+                    a.learning_rate = learning_rate
+                    a.discount_factor = discount_factor
+                    a.exploration_rate = exploration_rate
+                    a.initial_Q = initial_Q
+
+                    e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+                    # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
+
+                    # Now simulate it
+                    sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
+                    # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+
+                    sim.run(n_trials=100)  # run for a specified number of trials
+                    # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+
+                    # remove the first item from the trackers as they are the initialised values not from a trial
+                    a.reward_tracker = a.reward_tracker[1:]
+                    a.success_tracker = a.success_tracker[1:]
+                    # calulate some statistics
+                    successes[iii][jjj][kkk][lll] = a.success_tracker.count(True)
+                    average_rewards[iii][jjj][kkk][lll] = np.mean(a.reward_tracker)
+
+
+    max_successes = np.amax(successes)
+    best_indices = np.argwhere(successes==max_successes)
+    best_indices = np.transpose(best_indices)
+
+    print "Maximum number of successes: {}".format(max_successes)
+    print "Learning rate: {}".format([learning_rates[x] for x in best_indices[0]])
+    print "Discount factor: {}".format([discount_factors[x] for x in best_indices[1]])
+    print "Exploration rate: {}".format([exploration_rates[x] for x in best_indices[2]])
+    print "Initial Q: {}".format([initial_Qs[x] for x in best_indices[3]])
+
+    max_reward = np.amax(average_rewards)
+    best_indices = np.argwhere(average_rewards==max_reward)
+    best_indices = np.transpose(best_indices)
+
+    print "Maximum average reward: {}".format(max_reward)
+    print "Learning rate: {}".format([learning_rates[x] for x in best_indices[0]])
+    print "Discount factor: {}".format([discount_factors[x] for x in best_indices[1]])
+    print "Exploration rate: {}".format([exploration_rates[x] for x in best_indices[2]])
+    print "Initial Q: {}".format([initial_Qs[x] for x in best_indices[3]])
 
 if __name__ == '__main__':
     run()
