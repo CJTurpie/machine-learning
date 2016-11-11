@@ -27,6 +27,10 @@ class LearningAgent(Agent):
         self.exploration_rate = 0.1
         self.Q = {}
         self.initial_Q = 0
+        self.previous_state = {}
+        self.previous_reward = 0.0
+        self.previous_action = []
+        self.first_run_flag = True
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
@@ -38,6 +42,10 @@ class LearningAgent(Agent):
         self.trial_success = False
         # reset state
         self.state = {}
+        self.previous_state = {}
+        self.previous_reward = 0.0
+        self.previous_action = []
+        self.first_run_flag = True
 
     def update(self, t):
         # Gather inputs
@@ -59,6 +67,12 @@ class LearningAgent(Agent):
                 a_list[a] = self.initial_Q
             self.Q[self.state] = a_list
 
+        # TODO: Learn policy based on state, action, reward
+        if self.first_run_flag is False:
+            self.Q[self.previous_state][self.previous_action] = (((1 - self.learning_rate) * self.Q[self.previous_state][self.previous_action])
+                                     + (self.learning_rate * (self.previous_reward + self.discount_factor * (max(self.Q[self.state].values())))))
+        self.first_run_flag = False
+
         # TODO: Select action according to your policy
         if random.random() < self.exploration_rate:
             action = random.choice(self.env.valid_actions)
@@ -72,9 +86,10 @@ class LearningAgent(Agent):
         if reward > 2:
             self.trial_success = True
 
-        # TODO: Learn policy based on state, action, reward
-        self.Q[self.state][action] = (((1 - self.learning_rate) * self.Q[self.state][action])
-                                     + (self.learning_rate * (reward + self.discount_factor * (max(self.Q[self.state].values())))))
+        #store previous state and action for the Q-learning
+        self.previous_state = self.state
+        self.previous_reward = reward
+        self.previous_action = action
 
         # print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
