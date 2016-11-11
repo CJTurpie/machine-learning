@@ -102,6 +102,11 @@ def run():
     exploration_rates = (0, 0.05, 0.1, 0.5, 0.9, 0.95, 1)
     initial_Qs = (0, 13)
 
+    learning_rates = (0.95,)
+    discount_factors = (0.1,)
+    exploration_rates = (0.05,)
+    initial_Qs = (13,)
+
     successes = np.zeros((len(learning_rates), len(discount_factors), len(exploration_rates), len(initial_Qs)))
     average_rewards = np.zeros((len(learning_rates), len(discount_factors), len(exploration_rates), len(initial_Qs)))
 
@@ -123,7 +128,7 @@ def run():
                     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
                     # Now simulate it
-                    sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
+                    sim = Simulator(e, update_delay=0.0, display=False)  # create simulator (uses pygame when display=True, if available)
                     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
                     sim.run(n_trials=100)  # run for a specified number of trials
@@ -135,6 +140,12 @@ def run():
                     # calulate some statistics
                     successes[iii][jjj][kkk][lll] = a.success_tracker.count(True)
                     average_rewards[iii][jjj][kkk][lll] = np.mean(a.reward_tracker)
+
+                    # plot the rewards over time
+                    plt.plot(a.reward_tracker)
+                    plt.xlabel("Trial")
+                    plt.ylabel("Reward")
+                    plt.show()
 
 
     max_successes = np.amax(successes)
