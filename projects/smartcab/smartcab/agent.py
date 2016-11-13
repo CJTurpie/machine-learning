@@ -4,6 +4,7 @@ from planner import RoutePlanner
 from simulator import Simulator
 import numpy as np
 import matplotlib.pyplot as plt
+import pprint
 
 
 class LearningAgent(Agent):
@@ -19,6 +20,8 @@ class LearningAgent(Agent):
         self.reward_tracker = []
         self.trial_success = False
         self.success_tracker = []
+        self.trial_penalty = 0
+        self.penalty_tracker = []
         # initialise state
         self.state = {}
         # Q-Learing variables
@@ -40,6 +43,8 @@ class LearningAgent(Agent):
         self.trial_reward = 0
         self.success_tracker.append(self.trial_success)
         self.trial_success = False
+        self.penalty_tracker.append(self.trial_penalty)
+        self.trial_penalty = 0
         # reset state
         self.state = {}
         self.previous_state = {}
@@ -85,6 +90,8 @@ class LearningAgent(Agent):
         self.trial_reward += reward
         if reward > 2:
             self.trial_success = True
+        elif reward < 0:
+            self.trial_penalty += 1
 
         #store previous state and action for the Q-learning
         self.previous_state = self.state
@@ -109,6 +116,7 @@ def run():
 
     successes = np.zeros((len(learning_rates), len(discount_factors), len(exploration_rates), len(initial_Qs)))
     average_rewards = np.zeros((len(learning_rates), len(discount_factors), len(exploration_rates), len(initial_Qs)))
+    average_penalties = np.zeros((len(learning_rates), len(discount_factors), len(exploration_rates), len(initial_Qs)))
 
     for iii, learning_rate in enumerate(learning_rates):
         for jjj, discount_factor in enumerate(discount_factors):
@@ -137,15 +145,24 @@ def run():
                     # remove the first item from the trackers as they are the initialised values not from a trial
                     a.reward_tracker = a.reward_tracker[1:]
                     a.success_tracker = a.success_tracker[1:]
+                    a.penalty_tracker = a.penalty_tracker[1:]
                     # calulate some statistics
                     successes[iii][jjj][kkk][lll] = a.success_tracker.count(True)
                     average_rewards[iii][jjj][kkk][lll] = np.mean(a.reward_tracker)
+                    average_penalties[iii][jjj][kkk][lll] = np.mean(a.penalty_tracker)
 
                     # plot the rewards over time
                     plt.plot(a.reward_tracker)
                     plt.xlabel("Trial")
                     plt.ylabel("Reward")
                     plt.show()
+
+                    plt.plot(a.penalty_tracker)
+                    plt.xlabel("Trial")
+                    plt.ylabel("Penalties")
+                    plt.show()
+
+#                    pprint.pprint(a.Q)
 
 
     max_successes = np.amax(successes)
@@ -163,6 +180,16 @@ def run():
     best_indices = np.transpose(best_indices)
 
     print "Maximum average reward: {}".format(max_reward)
+    print "Learning rate: {}".format([learning_rates[x] for x in best_indices[0]])
+    print "Discount factor: {}".format([discount_factors[x] for x in best_indices[1]])
+    print "Exploration rate: {}".format([exploration_rates[x] for x in best_indices[2]])
+    print "Initial Q: {}".format([initial_Qs[x] for x in best_indices[3]])
+
+    min_penalties = np.amin(average_penalties)
+    best_indices = np.argwhere(average_penalties==min_penalties)
+    best_indices = np.transpose(best_indices)
+
+    print "Minimum average penalties: {}".format(min_penalties)
     print "Learning rate: {}".format([learning_rates[x] for x in best_indices[0]])
     print "Discount factor: {}".format([discount_factors[x] for x in best_indices[1]])
     print "Exploration rate: {}".format([exploration_rates[x] for x in best_indices[2]])
