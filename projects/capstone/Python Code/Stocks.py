@@ -6,6 +6,7 @@ Created on Sat Apr 01 12:58:17 2017
 """
 import pandas_datareader.data as web
 import matplotlib.pyplot as plt
+import numpy as np
 
 class Stocks:
     
@@ -42,6 +43,9 @@ class Stocks:
             
     def add_features(self, ticker):
         self.calc_daily_return(ticker)
+        self.calc_daily_return_direction(ticker)
+        self.calc_daily_log_return(ticker)
+        self.calc_daily_log_return_direction(ticker)
         days = [5, 21, 252]
         for day in days:
             self.calc_momentum(ticker, day)
@@ -70,6 +74,16 @@ class Stocks:
         self.calc_exponentially_weighted_moving_average(ticker, days)
         self.data[ticker]['EWMA' + str(days) + ' Delta'] = self.data[ticker]['Adj Close'] - self.data[ticker]['EWMA' + str(days)]
         
+    def calc_daily_return_direction(self, ticker):
+        self.calc_daily_return(ticker)
+        self.data[ticker]['Daily Return Direction'] = np.sign(self.data[ticker]['Daily Return'])
+        
+    def calc_daily_log_return(self, ticker):
+        self.data[ticker]['Daily Log Return'] = np.log(self.data[ticker]['Adj Close']) - np.log(self.data[ticker]['Adj Close'].shift(1))
+        
+    def calc_daily_log_return_direction(self, ticker):
+        self.calc_daily_log_return(ticker)
+        self.data[ticker]['Daily Log Return Direction'] = np.sign(self.data[ticker]['Daily Log Return'])
         
     def plot(self, ticker, keys):
         plt.figure()
@@ -84,8 +98,8 @@ if __name__ == "__main__":
     
     import datetime
     
-    start = datetime.datetime(2010,1,1)
-    end = datetime.datetime(2017,3,31)
+    start = datetime.date(2010,1,1)
+    end = datetime.date(2017,3,31)
     
     stocks = Stocks(start, end, ['GOOG', 'AAPL', 'SPY']) 
     print(stocks.get_tickers())
